@@ -9,3 +9,5 @@ plotly
 dash
 
 Run covid19_concise.py
+
+Publish using gunicorn
