@@ -1,4 +1,4 @@
-# Created by Meghadeep Roy Chowdhury 7/16/2020
+# Created by Meghadeep Roy Chowdhury 7/14/2020
 # All rights reserved under GNU AGPLv3
 # details: https://www.gnu.org/licenses/agpl-3.0.en.html
 
@@ -69,42 +69,34 @@ def make_dfs_better(df):
 
 
 def level1_validate(level0, level1, df):
+    # Make a dictionary of multi-index column names
     di = convert_tuples_to_dict(np.delete(df.columns.values, 0))
-    if level1 == ['Total']:
-        flag = set(level1).issubset(set(di[level0[0]]))
-        if flag:
-            return True
-        else:
-            raise KeyError
-    else:
-        return set(level1).issubset(set(di[level0[0]]))
+    # Check if level-1 values are inside level-0
+    return set(level1).issubset(set(di[level0[0]]))
 
 
-def get_viz_data(level0, level1, df_raw, df_daily, graph_type):
+def get_viz_data(level0, level1, df_raw, df_daily, graph_type, graph_name):
     # Single selection level0
     if len(level0) == 1:
-        try:
-            if not level1_validate(level0, level1, df_raw):
-                level1 = ['Total']
-        except KeyError:
-            print('What the FUCK?! How can this shit happen?!')
-            level0 = ['Total']
-            pass
         # Single selection level1
         if len(level1) == 1:
             # Check for daily increase graph type
+            graph_data = []
             if graph_type == 'daily':
-                graph_data = go.Scatter(x=df_daily['Date'],
-                                        y=df_daily[level0[0]][level1[0]])
+                graph_data.append(go.Scatter(x=df_daily['Date'],
+                                             y=df_daily[level0[0]][level1[0]],
+                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
             # Daily Increase - 7 Day rolling average
             elif graph_type == 'rolling':
                 rolling = df_daily.rolling(7).mean()
-                graph_data = go.Scatter(x=df_daily['Date'],
-                                        y=rolling[level0[0]][level1[0]])
+                graph_data.append(go.Scatter(x=df_daily['Date'],
+                                             y=rolling[level0[0]][level1[0]],
+                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
             # For any other graph type
             else:
-                graph_data = go.Scatter(x=df_raw['Date'],
-                                        y=df_raw[level0[0]][level1[0]])
+                graph_data.append(go.Scatter(x=df_raw['Date'],
+                                             y=df_raw[level0[0]][level1[0]],
+                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
             # Get current number
             current_number = f'{int(list(df_raw[level0[0]][level1[0]])[-1]):,}'
             # Get last increase
@@ -120,40 +112,28 @@ def get_viz_data(level0, level1, df_raw, df_daily, graph_type):
             multi_level1_df_daily = df_daily[level0[0]][level1]
             multi_level1_df_daily['Total_temp'] = multi_level1_df_daily.sum(axis=1)
 
-            # # Empty list for storing graph data
-            # graph_data = []
-            # column_level1 = level1
-            # column_level1.append('Total_temp')
-            # # Check for daily increase graph type
-            # if graph_type == 'daily':
-            #     for i in column_level1:
-            #         graph_data.append(go.Scatter(x=df_daily['Date'],
-            #                                      y=multi_level1_df_daily[i]))
-            # # Daily Increase - 7 Day rolling average
-            # elif graph_type == 'rolling':
-            #     rolling = multi_level1_df_daily.rolling(7).mean()
-            #     for i in column_level1:
-            #         graph_data.append(go.Scatter(x=df_daily['Date'],
-            #                                      y=rolling[i]))
-            # # For any other graph type
-            # else:
-            #     for i in column_level1:
-            #         graph_data.append(go.Scatter(x=df_raw['Date'],
-            #                                      y=multi_level1_df_raw[i]))
-
+            # Empty list for storing graph data
+            graph_data = []
             # Check for daily increase graph type
             if graph_type == 'daily':
-                graph_data = go.Scatter(x=df_daily['Date'],
-                                        y=multi_level1_df_daily['Total_temp'])
+                for i in multi_level1_df_daily.columns.to_list():
+                    graph_data.append(go.Scatter(x=df_daily['Date'],
+                                                 y=multi_level1_df_daily[i],
+                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
             # Daily Increase - 7 Day rolling average
             elif graph_type == 'rolling':
                 rolling = multi_level1_df_daily.rolling(7).mean()
-                graph_data = go.Scatter(x=df_daily['Date'],
-                                        y=rolling['Total_temp'])
+                for i in multi_level1_df_daily.columns.to_list():
+                    graph_data.append(go.Scatter(x=df_daily['Date'],
+                                                 y=rolling[i],
+                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
             # For any other graph type
             else:
-                graph_data = go.Scatter(x=df_raw['Date'],
-                                        y=multi_level1_df_raw['Total_temp'])
+                for i in multi_level1_df_raw.columns.to_list():
+                    graph_data.append(go.Scatter(x=df_raw['Date'],
+                                                 y=multi_level1_df_raw[i],
+                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+
             # Get current number
             current_number = f'{int(list(multi_level1_df_raw["Total_temp"])[-1]):,}'
             # Get last increase
@@ -170,40 +150,28 @@ def get_viz_data(level0, level1, df_raw, df_daily, graph_type):
             multi_level0_df_daily[i] = df_daily[i]['Total']
         multi_level0_df_raw['Total_temp'] = multi_level0_df_raw.sum(axis=1)
         multi_level0_df_daily['Total_temp'] = multi_level0_df_daily.sum(axis=1)
-        # # Empty list for storing graph data
-        # graph_data = []
-        # column_level0 = level0
-        # column_level0.append('Total_temp')
-        # # Check for daily increase graph type
-        # if graph_type == 'daily':
-        #     for i in column_level0:
-        #         graph_data.append(go.Scatter(x=df_daily['Date'],
-        #                                      y=multi_level0_df_daily[i]))
-        # # Daily Increase - 7 Day rolling average
-        # elif graph_type == 'rolling':
-        #     rolling = multi_level0_df_daily.rolling(7).mean()
-        #     for i in column_level0:
-        #         graph_data.append(go.Scatter(x=df_daily['Date'],
-        #                                      y=rolling[i]))
-        # # For any other graph type
-        # else:
-        #     for i in column_level0:
-        #         graph_data.append(go.Scatter(x=df_raw['Date'],
-        #                                      y=multi_level0_df_raw[i]))
 
+        # Empty list for storing graph data
+        graph_data = []
         # Check for daily increase graph type
         if graph_type == 'daily':
-            graph_data = go.Scatter(x=df_daily['Date'],
-                                    y=multi_level0_df_daily['Total_temp'])
+            for i in multi_level0_df_daily.columns.to_list():
+                graph_data.append(go.Scatter(x=df_daily['Date'],
+                                             y=multi_level0_df_daily[i],
+                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
         # Daily Increase - 7 Day rolling average
         elif graph_type == 'rolling':
             rolling = multi_level0_df_daily.rolling(7).mean()
-            graph_data = go.Scatter(x=df_daily['Date'],
-                                    y=rolling['Total_temp'])
+            for i in multi_level0_df_daily.columns.to_list():
+                graph_data.append(go.Scatter(x=df_daily['Date'],
+                                             y=rolling[i],
+                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
         # For any other graph type
         else:
-            graph_data = go.Scatter(x=df_raw['Date'],
-                                    y=multi_level0_df_raw['Total_temp'])
+            for i in multi_level0_df_raw.columns.to_list():
+                graph_data.append(go.Scatter(x=df_raw['Date'],
+                                             y=multi_level0_df_raw[i],
+                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
 
         # Get current number
         current_number = f'{int(list(multi_level0_df_raw["Total_temp"])[-1]):,}'
@@ -460,17 +428,17 @@ def update_figure(country, state, graph_type_global):
                 title_confirmed = 'Confirmed Cases: Global'
                 confirmed_global_graph_data, confirmed_number_global, confirmed_increase_global = \
                     get_viz_data(country_input, state_input, confirmed_global,
-                                 confirmed_global_daily, graph_type_global)
+                                 confirmed_global_daily, graph_type_global, 'Confirmed')
 
                 title_death = 'Number of Deaths: Global'
                 death_global_graph_data, death_number_global, death_increase_global = \
                     get_viz_data(country_input, state_input, death_global,
-                                 death_global_daily, graph_type_global)
+                                 death_global_daily, graph_type_global, 'Deaths')
 
                 title_recovery = 'Recovery Numbers: Global'
                 recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                     get_viz_data(country_input, state_input, recovered_global,
-                                 recovered_global_daily, graph_type_global)
+                                 recovered_global_daily, graph_type_global, 'Recovered')
 
             # Default option or when user removes state option
             elif not set(state).issubset(set(global_dropdown_dict[country[0]])):
@@ -480,17 +448,17 @@ def update_figure(country, state, graph_type_global):
                 title_confirmed = 'Confirmed Cases: ' + country_input[0] + ' - ' + state_input[0]
                 confirmed_global_graph_data, confirmed_number_global, confirmed_increase_global = \
                     get_viz_data(country_input, state_input, confirmed_global,
-                                 confirmed_global_daily, graph_type_global)
+                                 confirmed_global_daily, graph_type_global, 'Confirmed')
 
                 title_death = 'Number of Deaths: ' + country_input[0] + ' - ' + state_input[0]
                 death_global_graph_data, death_number_global, death_increase_global = \
                     get_viz_data(country_input, state_input, death_global,
-                                 death_global_daily, graph_type_global)
+                                 death_global_daily, graph_type_global, 'Deaths')
 
                 title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - ' + state_input[0]
                 recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                     get_viz_data(country_input, state_input, recovered_global,
-                                 recovered_global_daily, graph_type_global)
+                                 recovered_global_daily, graph_type_global, 'Recovered')
 
             # When user selects everything
             else:
@@ -500,7 +468,7 @@ def update_figure(country, state, graph_type_global):
                 title_confirmed = 'Confirmed Cases: ' + country_input[0] + ' - ' + state_input[0]
                 confirmed_global_graph_data, confirmed_number_global, confirmed_increase_global = \
                     get_viz_data(country_input, state_input, confirmed_global,
-                                 confirmed_global_daily, graph_type_global)
+                                 confirmed_global_daily, graph_type_global, 'Confirmed')
 
                 # Check if death numbers available state-wise
                 if set(state).issubset(set(death_global[country[0]].columns.to_list())):
@@ -509,14 +477,14 @@ def update_figure(country, state, graph_type_global):
                     title_death = 'Number of Deaths: ' + country_input[0] + ' - ' + state_input[0]
                     death_global_graph_data, death_number_global, death_increase_global = \
                         get_viz_data(country_input, state_input, death_global,
-                                     death_global_daily, graph_type_global)
+                                     death_global_daily, graph_type_global, 'Deaths')
                 else:
                     state_input = ['Total']
 
                     title_death = 'Number of Deaths: ' + country_input[0] + ' - ' + state_input[0]
                     death_global_graph_data, death_number_global, death_increase_global = \
                         get_viz_data(country_input, state_input, death_global,
-                                     death_global_daily, graph_type_global)
+                                     death_global_daily, graph_type_global, 'Deaths')
 
                 # Check if recovery numbers available state-wise
                 if set(state).issubset(set(recovered_global[country[0]].columns.to_list())):
@@ -525,22 +493,27 @@ def update_figure(country, state, graph_type_global):
                     title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - ' + state_input[0]
                     recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                         get_viz_data(country_input, state_input, recovered_global,
-                                     recovered_global_daily, graph_type_global)
+                                     recovered_global_daily, graph_type_global, 'Recovered')
                 else:
                     state_input = ['Total']
 
                     title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - ' + state_input[0]
                     recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                         get_viz_data(country_input, state_input, recovered_global,
-                                     recovered_global_daily, graph_type_global)
+                                     recovered_global_daily, graph_type_global, 'Recovered')
 
             # Make an empty subplot figure
             fig_global = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                        subplot_titles=(title_confirmed, title_recovery, title_death))
             # Insert traces in the figure
-            fig_global.add_trace(confirmed_global_graph_data, row=1, col=1)
-            fig_global.add_trace(death_global_graph_data, row=2, col=2)
-            fig_global.add_trace(recovered_global_graph_data, row=2, col=1)
+            # Insert traces in the figure
+            for i in confirmed_global_graph_data:
+                fig_global.append_trace(i, row=1, col=1)
+            for i in recovered_global_graph_data:
+                fig_global.append_trace(i, row=2, col=1)
+            for i in death_global_graph_data:
+                fig_global.append_trace(i, row=2, col=2)
+
             # Update size and title
             fig_global.update_layout(showlegend=False, height=800,
                                      title_text=fig_graph_title[graph_type_global] + ': ' +
@@ -580,52 +553,50 @@ def update_figure(country, state, graph_type_global):
             title_confirmed = 'Confirmed Cases: ' + country_input[0] + ' - Selected States'
             confirmed_global_graph_data, confirmed_number_global, confirmed_increase_global = \
                 get_viz_data(country_input, state_input, confirmed_global,
-                             confirmed_global_daily, graph_type_global)
+                             confirmed_global_daily, graph_type_global, 'Confirmed')
 
             # Check if death numbers are available state-wise
             if set(state).issubset(set(death_global[country[0]].columns.to_list())):
-                title_death = 'Number of deaths: ' + country_input[0] + ' - Selected Counties'
+                title_death = 'Number of deaths: ' + country_input[0] + ' - Selected States'
                 death_global_graph_data, death_number_global, death_increase_global = \
                     get_viz_data(country_input, state_input, death_global,
-                                 death_global_daily, graph_type_global)
+                                 death_global_daily, graph_type_global, 'Deaths')
             else:
                 state_input = ['Total']
                 title_death = 'Number of Deaths: ' + country_input[0] + ' - ' + state_input[0]
                 death_global_graph_data, death_number_global, death_increase_global = \
                     get_viz_data(country_input, state_input, death_global,
-                                 death_global_daily, graph_type_global)
+                                 death_global_daily, graph_type_global, 'Deaths')
 
             # Check if recovery numbers available state-wise
             if set(state).issubset(set(recovered_global[country[0]].columns.to_list())):
                 state_input = state
 
-                title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - ' + state_input[0]
+                title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - Selected States'
                 recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                     get_viz_data(country_input, state_input, recovered_global,
-                                 recovered_global_daily, graph_type_global)
+                                 recovered_global_daily, graph_type_global, 'Recovered')
             else:
                 state_input = ['Total']
 
                 title_recovery = 'Recovery Numbers: ' + country_input[0] + ' - ' + state_input[0]
                 recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
                     get_viz_data(country_input, state_input, recovered_global,
-                                 recovered_global_daily, graph_type_global)
+                                 recovered_global_daily, graph_type_global, 'Recovered')
 
             # Make an empty subplot figure
             fig_global = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                        subplot_titles=(title_confirmed, title_recovery, title_death))
             # Insert traces in the figure
-            # j = 0
-            # while j < len(state):
-            # fig_global.add_trace(confirmed_global_graph_data[j], row=1, col=1)
-            # fig_global.add_trace(death_global_graph_data[j], row=2, col=2)
-            # j += 1
-            fig_global.add_trace(confirmed_global_graph_data, row=1, col=1)
-            fig_global.add_trace(death_global_graph_data, row=2, col=2)
-            fig_global.add_trace(recovered_global_graph_data, row=2, col=1)
+            for i in confirmed_global_graph_data:
+                fig_global.append_trace(i, row=1, col=1)
+            for i in recovered_global_graph_data:
+                fig_global.append_trace(i, row=2, col=1)
+            for i in death_global_graph_data:
+                fig_global.append_trace(i, row=2, col=2)
 
             # Update size and title
-            fig_global.update_layout(showlegend=False, height=800,
+            fig_global.update_layout(showlegend=True, height=800,
                                      title_text=fig_graph_title[graph_type_global] + ': ' +
                                                 list(confirmed_global['Date'])[-1].strftime('%x'))
             # Check for logarithmic graph type
@@ -662,32 +633,31 @@ def update_figure(country, state, graph_type_global):
         title_confirmed = 'Confirmed Cases: Selected Countries'
         confirmed_global_graph_data, confirmed_number_global, confirmed_increase_global = \
             get_viz_data(country_input, state_input, confirmed_global,
-                         confirmed_global_daily, graph_type_global)
+                         confirmed_global_daily, graph_type_global, 'Confirmed')
 
         title_death = 'Number of Deaths: Selected Countries'
         death_global_graph_data, death_number_global, death_increase_global = \
             get_viz_data(country_input, state_input, death_global,
-                         death_global_daily, graph_type_global)
+                         death_global_daily, graph_type_global, 'Deaths')
 
-        title_recovery = 'Recovery Numbers: Selected Counties'
+        title_recovery = 'Recovery Numbers: Selected Countries'
         recovered_global_graph_data, recovery_number_global, recovered_increase_us = \
             get_viz_data(country_input, state_input, recovered_global,
-                         recovered_global_daily, graph_type_global)
+                         recovered_global_daily, graph_type_global, 'Recovered')
 
         # Make an empty subplot figure
         fig_global = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                    subplot_titles=(title_confirmed, title_recovery, title_death))
         # Insert traces in the figure
-        # j = 0
-        # while j < len(state):
-        # fig_global.add_trace(confirmed_global_graph_data[j], row=1, col=1)
-        # fig_global.add_trace(death_global_graph_data[j], row=2, col=2)
-        # j += 1
-        fig_global.add_trace(confirmed_global_graph_data, row=1, col=1)
-        fig_global.add_trace(death_global_graph_data, row=2, col=2)
-        fig_global.add_trace(recovered_global_graph_data, row=2, col=1)
+        for i in confirmed_global_graph_data:
+            fig_global.append_trace(i, row=1, col=1)
+        for i in recovered_global_graph_data:
+            fig_global.append_trace(i, row=2, col=1)
+        for i in death_global_graph_data:
+            fig_global.append_trace(i, row=2, col=2)
+
         # Update size and title
-        fig_global.update_layout(showlegend=False, height=800,
+        fig_global.update_layout(showlegend=True, height=800,
                                  title_text=fig_graph_title[graph_type_global] + ': ' + list(confirmed_global['Date'])[
                                      -1].strftime(
                                      '%x'))
@@ -768,12 +738,12 @@ def update_us_figure(us_state, county, graph_type_us):
                 title_confirmed = 'Confirmed Cases: US'
                 confirmed_us_graph_data, confirmed_number_us, confirmed_increase_us = \
                     get_viz_data(state_input, county_input, confirmed_us,
-                                 confirmed_us_daily, graph_type_us)
+                                 confirmed_us_daily, graph_type_us, 'Confirmed')
 
                 title_death = 'Number of Deaths: US'
                 death_us_graph_data, death_number_us, death_increase_us = \
                     get_viz_data(state_input, county_input, death_us,
-                                 death_us_daily, graph_type_us)
+                                 death_us_daily, graph_type_us, 'Deaths')
 
             # Default option or when user removes county option
             elif not set(county).issubset(set(us_dropdown_dict[us_state[0]])):
@@ -783,12 +753,12 @@ def update_us_figure(us_state, county, graph_type_us):
                 title_confirmed = 'Confirmed Cases: ' + state_input[0] + ' - ' + county_input[0]
                 confirmed_us_graph_data, confirmed_number_us, confirmed_increase_us = \
                     get_viz_data(state_input, county_input, confirmed_us,
-                                 confirmed_us_daily, graph_type_us)
+                                 confirmed_us_daily, graph_type_us, 'Confirmed')
 
                 title_death = 'Number of Deaths: ' + state_input[0] + ' - ' + county_input[0]
                 death_us_graph_data, death_number_us, death_increase_us = \
                     get_viz_data(state_input, county_input, death_us,
-                                 death_us_daily, graph_type_us)
+                                 death_us_daily, graph_type_us, 'Deaths')
 
             # When user selects everything
             else:
@@ -798,34 +768,38 @@ def update_us_figure(us_state, county, graph_type_us):
                 title_confirmed = 'Confirmed Cases: ' + state_input[0] + ' - ' + county_input[0]
                 confirmed_us_graph_data, confirmed_number_us, confirmed_increase_us = \
                     get_viz_data(state_input, county_input, confirmed_us,
-                                 confirmed_us_daily, graph_type_us)
+                                 confirmed_us_daily, graph_type_us, 'Confirmed')
 
                 # Check if death numbers available county-wise
                 if set(county).issubset(set(death_us[us_state[0]].columns.to_list())):
                     title_death = 'Number of Deaths: ' + state_input[0] + ' - ' + county_input[0]
                     death_us_graph_data, death_number_us, death_increase_us = \
                         get_viz_data(state_input, county_input, death_us,
-                                     death_us_daily, graph_type_us)
+                                     death_us_daily, graph_type_us, 'Deaths')
                 else:
                     county_input = ['Total']
 
                     title_death = 'Number of Deaths: ' + state_input[0] + ' - ' + county_input[0]
                     death_us_graph_data, death_number_us, death_increase_us = \
                         get_viz_data(state_input, county_input, death_us,
-                                     death_us_daily, graph_type_us)
+                                     death_us_daily, graph_type_us, 'Deaths')
 
             title_recovery = 'Recovery Numbers: US - Total'
             recovered_us_graph_data, recovery_number_us, recovered_increase_us = \
                 get_viz_data(['US'], ['Total'], recovered_global,
-                             recovered_global_daily, graph_type_us)
+                             recovered_global_daily, graph_type_us, 'Recovered')
 
             # Make an empty subplot figure
             fig_us = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                    subplot_titles=(title_confirmed, title_recovery, title_death))
             # Insert traces in the figure
-            fig_us.add_trace(confirmed_us_graph_data, row=1, col=1)
-            fig_us.add_trace(death_us_graph_data, row=2, col=2)
-            fig_us.add_trace(recovered_us_graph_data, row=2, col=1)
+            for i in confirmed_us_graph_data:
+                fig_us.append_trace(i, row=1, col=1)
+            for i in recovered_us_graph_data:
+                fig_us.append_trace(i, row=2, col=1)
+            for i in death_us_graph_data:
+                fig_us.append_trace(i, row=2, col=2)
+
             # Update size and title
             fig_us.update_layout(showlegend=False, height=800,
                                  title_text=fig_graph_title[graph_type_us] + ': ' +
@@ -865,41 +839,42 @@ def update_us_figure(us_state, county, graph_type_us):
             title_confirmed = 'Confirmed Cases: ' + state_input[0] + ' - Selected Counties'
             confirmed_us_graph_data, confirmed_number_us, confirmed_increase_us = \
                 get_viz_data(state_input, county_input, confirmed_us,
-                             confirmed_us_daily, graph_type_us)
+                             confirmed_us_daily, graph_type_us, 'Confirmed')
 
             # Check if death numbers are available county-wise
             if set(county).issubset(set(death_us[us_state[0]].columns.to_list())):
+                county_input = county
+
                 title_death = 'Number of deaths: ' + state_input[0] + ' - Selected Counties'
                 death_us_graph_data, death_number_us, death_increase_us = \
                     get_viz_data(state_input, county_input, death_us,
-                                 death_us_daily, graph_type_us)
+                                 death_us_daily, graph_type_us, 'Deaths')
             else:
                 county_input = ['Total']
-                title_death = 'Number of Deaths: ' + state_input[0] + ' - ' + county_input[0]
+
+                title_death = 'Number of Deaths: ' + state_input[0] + ' - Tots'
                 death_us_graph_data, death_number_us, death_increase_us = \
                     get_viz_data(state_input, county_input, death_us,
-                                 death_us_daily, graph_type_us)
+                                 death_us_daily, graph_type_us, 'Deaths')
 
             title_recovery = 'Recovery Numbers: US - Total'
             recovered_us_graph_data, recovery_number_us, recovered_increase_us = \
                 get_viz_data(['US'], ['Total'], recovered_global,
-                             recovered_global_daily, graph_type_us)
+                             recovered_global_daily, graph_type_us, 'Recovered')
 
             # Make an empty subplot figure
             fig_us = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                    subplot_titles=(title_confirmed, title_recovery, title_death))
             # Insert traces in the figure
-            # j = 0
-            # while j < len(county):
-                # fig_us.add_trace(confirmed_us_graph_data[j], row=1, col=1)
-                # fig_us.add_trace(death_us_graph_data[j], row=2, col=2)
-                # j += 1
-            fig_us.add_trace(confirmed_us_graph_data, row=1, col=1)
-            fig_us.add_trace(death_us_graph_data, row=2, col=2)
-            fig_us.add_trace(recovered_us_graph_data, row=2, col=1)
+            for i in confirmed_us_graph_data:
+                fig_us.append_trace(i, row=1, col=1)
+            for i in recovered_us_graph_data:
+                fig_us.append_trace(i, row=2, col=1)
+            for i in death_us_graph_data:
+                fig_us.append_trace(i, row=2, col=2)
 
             # Update size and title
-            fig_us.update_layout(showlegend=False, height=800,
+            fig_us.update_layout(showlegend=True, height=800,
                                  title_text=fig_graph_title[graph_type_us] + ': ' +
                                             list(confirmed_us['Date'])[-1].strftime('%x'))
             # Check for logarithmic graph type
@@ -935,32 +910,31 @@ def update_us_figure(us_state, county, graph_type_us):
         title_confirmed = 'Confirmed Cases: Selected States'
         confirmed_us_graph_data, confirmed_number_us, confirmed_increase_us = \
             get_viz_data(state_input, county_input, confirmed_us,
-                         confirmed_us_daily, graph_type_us)
+                         confirmed_us_daily, graph_type_us, 'Confirmed')
 
         title_death = 'Number of Deaths: Selected States'
         death_us_graph_data, death_number_us, death_increase_us = \
             get_viz_data(state_input, county_input, death_us,
-                         death_us_daily, graph_type_us)
+                         death_us_daily, graph_type_us, 'Deaths')
 
         title_recovery = 'Recovery Numbers: US - Total'
         recovered_us_graph_data, recovery_number_us, recovered_increase_us = \
             get_viz_data(['US'], ['Total'], recovered_global,
-                         recovered_global_daily, graph_type_us)
+                         recovered_global_daily, graph_type_us, 'Recovered')
 
         # Make an empty subplot figure
         fig_us = make_subplots(rows=2, cols=2, specs=[[{"colspan": 2}, None], [{}, {}]],
                                subplot_titles=(title_confirmed, title_recovery, title_death))
         # Insert traces in the figure
-        j = 0
-        # while j < len(county):
-            # fig_us.add_trace(confirmed_us_graph_data[j], row=1, col=1)
-            # fig_us.add_trace(death_us_graph_data[j], row=2, col=2)
-            # j += 1
-        fig_us.add_trace(confirmed_us_graph_data, row=1, col=1)
-        fig_us.add_trace(death_us_graph_data, row=2, col=2)
-        fig_us.add_trace(recovered_us_graph_data, row=2, col=1)
+        for i in confirmed_us_graph_data:
+            fig_us.append_trace(i, row=1, col=1)
+        for i in recovered_us_graph_data:
+            fig_us.append_trace(i, row=2, col=1)
+        for i in death_us_graph_data:
+            fig_us.append_trace(i, row=2, col=2)
+
         # Update size and title
-        fig_us.update_layout(showlegend=False, height=800,
+        fig_us.update_layout(showlegend=True, height=800,
                              title_text=fig_graph_title[graph_type_us] + ': ' + list(confirmed_us['Date'])[-1].strftime(
                                  '%x'))
         # Check for logarithmic graph type
