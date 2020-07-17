@@ -262,6 +262,34 @@ recovered_global, recovered_global_daily = make_dfs_better(recovered_global)
 confirmed_us, confirmed_us_daily = make_dfs_better(confirmed_us)
 death_us, death_us_daily = make_dfs_better(death_us)
 
+# Add European Bloc
+eu_bloc = [('Austria', 'Total'), ('Belgium', 'Total'), ('Bulgaria', 'Total'), ('Croatia', 'Total'), ('Cyprus', 'Total'),
+           ('Czechia', 'Total'), ('Denmark', 'Total'), ('Estonia', 'Total'), ('Finland', 'Total'), ('France', 'Total'),
+           ('Germany', 'Total'), ('Greece', 'Total'), ('Hungary', 'Total'), ('Ireland', 'Total'), ('Italy', 'Total'),
+           ('Latvia', 'Total'), ('Lithuania', 'Total'), ('Luxembourg', 'Total'), ('Malta', 'Total'), ('Poland', 'Total'),
+           ('Netherlands', 'Total'), ('Portugal', 'Total'), ('Romania', 'Total'), ('Slovenia', 'Total'),
+           ('Slovakia', 'Total'), ('Spain', 'Total'), ('Sweden', 'Total')]
+eu_df_raw_confirmed = confirmed_global[eu_bloc]
+eu_df_daily_confirmed = confirmed_global_daily[eu_bloc]
+eu_df_raw_recovered = recovered_global[eu_bloc]
+eu_df_daily_recovered = recovered_global_daily[eu_bloc]
+eu_df_raw_death = death_global[eu_bloc]
+eu_df_daily_death = death_global_daily[eu_bloc]
+
+eu_df_raw_confirmed[('Total', 'Total')] = eu_df_raw_confirmed.sum(axis=1)
+eu_df_daily_confirmed[('Total', 'Total')] = eu_df_daily_confirmed.sum(axis=1)
+eu_df_raw_recovered[('Total', 'Total')] = eu_df_raw_recovered.sum(axis=1)
+eu_df_daily_recovered[('Total', 'Total')] = eu_df_daily_recovered.sum(axis=1)
+eu_df_raw_death[('Total', 'Total')] = eu_df_raw_death.sum(axis=1)
+eu_df_daily_death[('Total', 'Total')] = eu_df_daily_death.sum(axis=1)
+
+confirmed_global[('European Union', 'Total')] = eu_df_raw_confirmed[('Total', 'Total')]
+confirmed_global_daily[('European Union', 'Total')] = eu_df_daily_confirmed[('Total', 'Total')]
+recovered_global[('European Union', 'Total')] = eu_df_raw_recovered[('Total', 'Total')]
+recovered_global_daily[('European Union', 'Total')] = eu_df_daily_recovered[('Total', 'Total')]
+death_global[('European Union', 'Total')] = eu_df_raw_death[('Total', 'Total')]
+death_global_daily[('European Union', 'Total')] = eu_df_daily_death[('Total', 'Total')]
+
 
 """
 ###################
