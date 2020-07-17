@@ -8,6 +8,6 @@ numpy
 plotly
 dash
 
-Run covid19_concise.py
+Run coronavirus_multi-select_seperate_plots.py
 
 Publish using gunicorn
