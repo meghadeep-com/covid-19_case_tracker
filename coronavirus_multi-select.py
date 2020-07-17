@@ -85,18 +85,18 @@ def get_viz_data(level0, level1, df_raw, df_daily, graph_type, graph_name):
             if graph_type == 'daily':
                 graph_data.append(go.Scatter(x=df_daily['Date'],
                                              y=df_daily[level0[0]][level1[0]],
-                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
+                                             name=level0[0]+' ('+level1[0]+') - '+graph_name))
             # Daily Increase - 7 Day rolling average
             elif graph_type == 'rolling':
                 rolling = df_daily.rolling(7).mean()
                 graph_data.append(go.Scatter(x=df_daily['Date'],
                                              y=rolling[level0[0]][level1[0]],
-                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
+                                             name=level0[0]+' ('+level1[0]+') - '+graph_name))
             # For any other graph type
             else:
                 graph_data.append(go.Scatter(x=df_raw['Date'],
                                              y=df_raw[level0[0]][level1[0]],
-                                             name=graph_name+' - '+level0[0]+' ('+level1[0]+')'))
+                                             name=level0[0]+' ('+level1[0]+') - '+graph_name))
             # Get current number
             current_number = f'{int(list(df_raw[level0[0]][level1[0]])[-1]):,}'
             # Get last increase
@@ -119,20 +119,20 @@ def get_viz_data(level0, level1, df_raw, df_daily, graph_type, graph_name):
                 for i in multi_level1_df_daily.columns.to_list():
                     graph_data.append(go.Scatter(x=df_daily['Date'],
                                                  y=multi_level1_df_daily[i],
-                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                                 name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
             # Daily Increase - 7 Day rolling average
             elif graph_type == 'rolling':
                 rolling = multi_level1_df_daily.rolling(7).mean()
                 for i in multi_level1_df_daily.columns.to_list():
                     graph_data.append(go.Scatter(x=df_daily['Date'],
                                                  y=rolling[i],
-                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                                 name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
             # For any other graph type
             else:
                 for i in multi_level1_df_raw.columns.to_list():
                     graph_data.append(go.Scatter(x=df_raw['Date'],
                                                  y=multi_level1_df_raw[i],
-                                                 name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                                 name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
 
             # Get current number
             current_number = f'{int(list(multi_level1_df_raw["Total_temp"])[-1]):,}'
@@ -158,20 +158,20 @@ def get_viz_data(level0, level1, df_raw, df_daily, graph_type, graph_name):
             for i in multi_level0_df_daily.columns.to_list():
                 graph_data.append(go.Scatter(x=df_daily['Date'],
                                              y=multi_level0_df_daily[i],
-                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                             name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
         # Daily Increase - 7 Day rolling average
         elif graph_type == 'rolling':
             rolling = multi_level0_df_daily.rolling(7).mean()
             for i in multi_level0_df_daily.columns.to_list():
                 graph_data.append(go.Scatter(x=df_daily['Date'],
                                              y=rolling[i],
-                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                             name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
         # For any other graph type
         else:
             for i in multi_level0_df_raw.columns.to_list():
                 graph_data.append(go.Scatter(x=df_raw['Date'],
                                              y=multi_level0_df_raw[i],
-                                             name=graph_name+' - '+('Total' if i == 'Total_temp' else i)))
+                                             name=('Total' if i == 'Total_temp' else i)+' - '+graph_name))
 
         # Get current number
         current_number = f'{int(list(multi_level0_df_raw["Total_temp"])[-1]):,}'
