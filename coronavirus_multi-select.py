@@ -1,6 +1,11 @@
 # Created by Meghadeep Roy Chowdhury 7/14/2020
 # All rights reserved under GNU AGPLv3
 # details: https://www.gnu.org/licenses/agpl-3.0.en.html
+# Dash modules listed below are licensed under MIT License:
+# dash, dash_core_components, dash_html_components, plotly
+# details: https://opensource.org/licenses/MIT
+# Flask module is licensed under BSD
+# details: https://flask.palletsprojects.com/en/1.1.x/license/
 
 
 import gc
